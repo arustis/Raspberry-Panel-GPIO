@@ -1,0 +1,82 @@
+PANEL GPIO — INTERFAZ GRÁFICA EN PYTHON / TKINTER
+Raspberry Pi 4, Debian Bullseye, Python 3.9.
+
+INSTALACIÓN EN LA RASPBERRY QUE YA EJECUTA TEST_GPIOS.PY
+1. Cierre el programa de terminal antes de abrir el panel.
+2. Instale el componente gráfico de Python (una sola vez):
+
+   sudo apt update
+   sudo apt install python3-tk
+
+3. Extraiga el ZIP y abra la carpeta panel-gpios en una terminal.
+4. Ejecute:
+
+   sh instalar.sh
+
+5. Haga doble clic en Panel GPIO en el escritorio. Si lo pide el escritorio,
+   elija Permitir ejecutar / Confiar. Abre una ventana sin terminal.
+
+El instalador copia el programa a ~/.local/share/panel-gpios.
+Reutiliza ~/.local/share/prueba-gpios/.venv y las bibliotecas smbus2 y
+RPi.GPIO 0.7.1 ya instaladas. Conserve ese entorno virtual.
+No modifica el programa de terminal, sus archivos ni la regla de /dev/gpiomem.
+Para actualizar, cierre el panel, extraiga un nuevo paquete y ejecute instalar.sh.
+
+USO
+- Al abrir, configura las entradas con pull-up, inicializa MCP23017 si está
+  disponible y configura los cinco actuadores en OFF. Empieza a leer cada 0,5 s.
+- Zonas y llamado: 22 recuadros numerados y el Botón de Llamado.
+  VERDE = ACTIVA, ROJO = NORMAL, GRIS = sin lectura / error.
+- Actuadores: un botón para cada salida. VERDE = ON, ROJO = OFF.
+  Nivel alto (3,3 V) = ON; nivel bajo (0 V) = OFF.
+  Apagar todos ordena OFF a todas las salidas configuradas.
+- Pausar monitoreo conserva los estados y las últimas lecturas.
+  Leer una vez actualiza sin cambiar si el monitoreo está pausado.
+- I2C y reloj: escanear, inicializar MCP23017, leer DS3231, ajustar su hora
+  con la del sistema y reconectar. Los resultados y errores aparecen abajo.
+- Reconectar ordena OFF antes de reconfigurar las salidas.
+- Cerrar ordena OFF y libera solo los pines que configuró el panel.
+  Tras liberarlos o apagar la Raspberry, el nivel depende del circuito externo.
+- La ventana se adapta al ancho. Use la rueda o la barra lateral para desplazarse.
+- Los estados ON/OFF indican el nivel GPIO, no confirman movimiento mecánico.
+- El lanzador evita abrir dos instancias del panel. No ejecute a la vez otro
+  programa que configure estos mismos GPIO, incluido el programa de terminal.
+
+PINES — NUMERACIÓN BCM / PIN FÍSICO (CONECTOR DE 40 PINES)
+Zona 1:  ID_SD / GPIO0, pin 27
+Zona 2:  GPIO5, pin 29
+Zona 3:  GPIO6, pin 31
+Zona 4:  GPIO13, pin 33
+Zona 15: GPIO19, pin 35
+Zona 22: GPIO22, pin 15
+Botón de Llamado: GPIO17, pin 11
+Actuador 1: GPIO16, pin 36
+Actuador 2: GPIO18, pin 12
+Actuador 3: GPIO12, pin 32
+Actuador 4: GPIO26, pin 37
+Actuador 5: GPIO15, pin 10
+Las otras zonas mantienen su asignación en MCP23017 a dirección 0x20.
+ID_SD debe estar libre de HAT y GPIO15 libre de UART.
+Entradas activas en bajo: el contacto conecta a GND.
+
+SI NO ABRE
+Registro: ~/.local/state/panel-gpios/panel.log
+También puede ejecutar desde una terminal:
+
+   sh "$HOME/.local/share/panel-gpios/abrir-panel.sh"
+
+Si falta tkinter, instale python3-tk como se indica arriba.
+Si no hay lecturas, revise el diagnóstico en la pestaña I2C y reloj.
+Se conservan los requisitos anteriores: I2C habilitado, usuario en gpio e i2c,
+/dev/gpiomem con root:gpio y modo 0660, smbus2 y RPi.GPIO 0.7.1 en el entorno.
+No hace falta ejecutar el panel con sudo.
+
+SIMULACIÓN OPCIONAL (SIN HARDWARE)
+   python3 panel_gpios.py --demo
+La ventana indica SIMULACIÓN. Al hacer clic en una zona o el Botón de Llamado
+se alterna su estado simulado. Nunca se accede al hardware en este modo.
+El acceso de escritorio abre siempre el modo real.
+
+VALIDACIÓN
+Pruebas de lógica con hardware simulado y pruebas de la ventana en una
+pantalla virtual. Falta validar en la Raspberry Pi y los módulos conectados.
